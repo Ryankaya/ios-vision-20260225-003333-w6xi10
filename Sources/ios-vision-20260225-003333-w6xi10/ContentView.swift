@@ -35,7 +35,7 @@ struct ContentView: View {
                         Text("No text recognized.")
                             .foregroundStyle(.secondary)
                     } else {
-                        ForEach(recognizedLines, id: \.self) { line in
+                        ForEach(Array(recognizedLines.enumerated()), id: \.offset) { _, line in
                             Text("• \(line)")
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -104,7 +104,15 @@ struct ContentView: View {
                 }
 
                 let observations = request.results as? [VNRecognizedTextObservation] ?? []
-                let lines = observations.compactMap { $0.topCandidates(1).first?.string }
+                // Sort in natural reading order: top-to-bottom, then left-to-right.
+                let sorted = observations.sorted { lhs, rhs in
+                    let yDiff = abs(lhs.boundingBox.midY - rhs.boundingBox.midY)
+                    if yDiff > 0.02 {
+                        return lhs.boundingBox.midY > rhs.boundingBox.midY
+                    }
+                    return lhs.boundingBox.minX < rhs.boundingBox.minX
+                }
+                let lines = sorted.compactMap { $0.topCandidates(1).first?.string.trimmingCharacters(in: .whitespacesAndNewlines) }
                 continuation.resume(returning: lines)
             }
             request.recognitionLevel = .accurate
