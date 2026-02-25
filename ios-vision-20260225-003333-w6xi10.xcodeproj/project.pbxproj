@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -12,7 +12,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		31F27D176E85130622D25BEC /* ios-vision-20260225-003333-w6xi10.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "ios-vision-20260225-003333-w6xi10.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		31F27D176E85130622D25BEC /* ios-vision-20260225-003333-w6xi10.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ios-vision-20260225-003333-w6xi10.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9AD941D5A74BED7AB0C5313 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E8EB44FDFB3A1F401250E605 /* ios-vision-20260225-003333-w6xi10App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ios-vision-20260225-003333-w6xi10App.swift"; sourceTree = "<group>"; };
 		FCB2DF77E30DED0B9C8D0ED9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -97,7 +97,6 @@
 			);
 			mainGroup = 6E7D986C069B678F643D856B;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -126,6 +125,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N3X2H33TR7;
 				INFOPLIST_FILE = "Sources/ios-vision-20260225-003333-w6xi10/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -145,6 +145,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = N3X2H33TR7;
 				INFOPLIST_FILE = "Sources/ios-vision-20260225-003333-w6xi10/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
