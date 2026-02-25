@@ -1,14 +1,20 @@
 # ios-vision-20260225-003333-w6xi10
 
-Minimal SwiftUI iOS sample demonstrating **Vision** text recognition with `VNRecognizeTextRequest`.
+SwiftUI iOS sample demonstrating a practical **Vision OCR** flow using `VNRecognizeTextRequest`.
 
 ## Feature Focus
 - Feature: Vision
 - Demo behavior:
-- Renders an image in memory that contains multiple lines of text.
-- Runs `VNRecognizeTextRequest` on that image.
-- Displays recognized lines in SwiftUI.
-- Includes a button to rerun OCR.
+- Lets the user pick a photo from the photo library.
+- Runs `VNRecognizeTextRequest` on the selected image.
+- Displays recognized text in reading order.
+- Provides a "Copy All Text" action for reuse.
+- Includes a sample image fallback for quick testing.
+
+## Practical Use Cases
+- Scan receipt totals into a notes app.
+- Copy text from signs, whiteboards, or printed pages.
+- Digitize short paper notes into editable text.
 
 ## Apple Documentation Used
 - https://developer.apple.com/documentation/vision

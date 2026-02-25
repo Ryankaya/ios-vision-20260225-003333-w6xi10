@@ -34,6 +34,7 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+        NSPhotoLibraryUsageDescription: Allow access so you can pick images and extract text with OCR.
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
     scheme:
