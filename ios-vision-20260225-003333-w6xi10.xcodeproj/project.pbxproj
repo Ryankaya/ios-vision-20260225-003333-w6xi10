@@ -9,10 +9,12 @@
 /* Begin PBXBuildFile section */
 		5B929898F91D30DBDAB191FE /* ios-vision-20260225-003333-w6xi10App.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8EB44FDFB3A1F401250E605 /* ios-vision-20260225-003333-w6xi10App.swift */; };
 		F5387D047C3EE11316705465 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9AD941D5A74BED7AB0C5313 /* ContentView.swift */; };
+		F8B36F4F04856C8C924DFBE2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 654D1B07A1A2E6B91E98AB36 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		31F27D176E85130622D25BEC /* ios-vision-20260225-003333-w6xi10.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ios-vision-20260225-003333-w6xi10.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		654D1B07A1A2E6B91E98AB36 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D9AD941D5A74BED7AB0C5313 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E8EB44FDFB3A1F401250E605 /* ios-vision-20260225-003333-w6xi10App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ios-vision-20260225-003333-w6xi10App.swift"; sourceTree = "<group>"; };
 		FCB2DF77E30DED0B9C8D0ED9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -38,6 +40,7 @@
 		92062F2CC9A28CB81166A5C7 /* ios-vision-20260225-003333-w6xi10 */ = {
 			isa = PBXGroup;
 			children = (
+				654D1B07A1A2E6B91E98AB36 /* Assets.xcassets */,
 				D9AD941D5A74BED7AB0C5313 /* ContentView.swift */,
 				FCB2DF77E30DED0B9C8D0ED9 /* Info.plist */,
 				E8EB44FDFB3A1F401250E605 /* ios-vision-20260225-003333-w6xi10App.swift */,
@@ -61,6 +64,7 @@
 			buildConfigurationList = 12A37B47BBE4F928787879DF /* Build configuration list for PBXNativeTarget "ios-vision-20260225-003333-w6xi10" */;
 			buildPhases = (
 				06428CD9DC3F2FB73BE0174C /* Sources */,
+				EF17E8004B375CDBBE943AD3 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -104,6 +108,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		EF17E8004B375CDBBE943AD3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F8B36F4F04856C8C924DFBE2 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		06428CD9DC3F2FB73BE0174C /* Sources */ = {

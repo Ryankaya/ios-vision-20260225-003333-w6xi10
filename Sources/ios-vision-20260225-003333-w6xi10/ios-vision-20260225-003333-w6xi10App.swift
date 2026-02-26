@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct IosMapkit20260223100627A70e9fApp: App {
+struct SnapScanApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

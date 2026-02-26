@@ -17,6 +17,7 @@ targets:
       base:
         INFOPLIST_FILE: Sources/ios-vision-20260225-003333-w6xi10/Info.plist
         PRODUCT_NAME: ios-vision-20260225-003333-w6xi10
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: 1,2
         CODE_SIGN_STYLE: Automatic
         CURRENT_PROJECT_VERSION: 1
@@ -34,7 +35,15 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+        CFBundleDisplayName: SnapScan
+        CFBundleIcons:
+          CFBundlePrimaryIcon:
+            CFBundleIconName: AppIcon
+        CFBundleIcons~ipad:
+          CFBundlePrimaryIcon:
+            CFBundleIconName: AppIcon
         NSPhotoLibraryUsageDescription: Allow access so you can pick images and extract text with OCR.
+        NSCameraUsageDescription: Allow camera access so you can take photos and extract text with OCR.
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
     scheme:
