@@ -136,7 +136,7 @@ struct ContentView: View {
     }
 
     private var detectedDetails: DetectedDetails {
-        extractDetectedDetails(from: recognizedLines)
+        extractDetectedDetails(from: recognizedLines, mode: scanMode)
     }
 
     private var outputText: String {
@@ -491,6 +491,7 @@ struct ContentView: View {
                 detailGroup(title: "Emails", values: detectedDetails.emails, kind: .email)
                 detailGroup(title: "Phones", values: detectedDetails.phones, kind: .phone)
             case .receipt:
+                detailGroup(title: "Cards", values: maskedCardNumbers(detectedDetails.cardNumbers), kind: .text)
                 detailGroup(title: "Receipt IDs", values: detectedDetails.receiptIDs, kind: .text)
                 detailGroup(title: "Payment Methods", values: detectedDetails.paymentMethods, kind: .text)
                 detailGroup(title: "Dates", values: detectedDetails.dates, kind: .date)
@@ -744,7 +745,7 @@ struct ContentView: View {
         return formatter
     }()
 
-    private func extractDetectedDetails(from lines: [String]) -> DetectedDetails {
+    private func extractDetectedDetails(from lines: [String], mode: ScanMode) -> DetectedDetails {
         let text = lines.joined(separator: "\n")
         guard !text.isEmpty else {
             return DetectedDetails(
@@ -792,6 +793,10 @@ struct ContentView: View {
         var receiptIDSeen = Set<String>()
         var paymentSeen = Set<String>()
 
+        let includeDateAndAmountDetails = mode != .card
+        let includeCardDetails = mode == .card || mode == .receipt
+        let includeReceiptDetails = mode == .receipt
+
         func appendUnique(_ value: String, to values: inout [String], seen: inout Set<String>) {
             let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !normalized.isEmpty else { return }
@@ -807,45 +812,56 @@ struct ContentView: View {
             appendUnique(email, to: &emails, seen: &emailSeen)
         }
 
-        for amount in matches(
-            of: #"(?:[$€£]\s?)?\d{1,3}(?:,\d{3})*(?:\.\d{2})|(?:USD|EUR|GBP)\s?\d+(?:\.\d{2})|\b\d+\.\d{2}\b"#,
-            in: text
-        ) {
-            appendUnique(amount.replacingOccurrences(of: " ", with: ""), to: &amounts, seen: &amountSeen)
-        }
+        if includeDateAndAmountDetails {
+            for amount in matches(
+                of: #"(?:[$€£]\s?)?\d{1,3}(?:,\d{3})*(?:\.\d{2})|(?:USD|EUR|GBP)\s?\d+(?:\.\d{2})|\b\d+\.\d{2}\b"#,
+                in: text
+            ) {
+                appendUnique(amount.replacingOccurrences(of: " ", with: ""), to: &amounts, seen: &amountSeen)
+            }
 
-        for time in matches(
-            of: #"\b\d{1,2}:\d{2}(?:\s?[APap][Mm])?\b"#,
-            in: text
-        ) {
-            appendUnique(time, to: &times, seen: &timeSeen)
-        }
-
-        for expiry in matches(
-            of: #"\b(0?[1-9]|1[0-2])\s*[/\-]\s*(\d{2}|\d{4})\b"#,
-            in: text
-        ) {
-            appendUnique(normalizeExpiry(expiry), to: &cardExpiryDates, seen: &expirySeen)
-        }
-
-        for number in extractCardNumberCandidates(from: text) {
-            appendUnique(number, to: &cardNumbers, seen: &cardNumberSeen)
-            let digitsOnly = number.filter(\.isNumber)
-            if let issuer = cardIssuer(for: digitsOnly) {
-                appendUnique(issuer, to: &cardIssuers, seen: &issuerSeen)
+            for time in matches(
+                of: #"\b\d{1,2}:\d{2}(?:\s?[APap][Mm])?\b"#,
+                in: text
+            ) {
+                appendUnique(time, to: &times, seen: &timeSeen)
             }
         }
 
-        for code in extractSecurityCodes(from: text) {
-            appendUnique(code, to: &securityCodes, seen: &securityCodeSeen)
+        if includeCardDetails {
+            for number in extractCardNumberCandidates(from: lines) {
+                appendUnique(number, to: &cardNumbers, seen: &cardNumberSeen)
+                let digitsOnly = number.filter(\.isNumber)
+                if let issuer = cardIssuer(for: digitsOnly) {
+                    appendUnique(issuer, to: &cardIssuers, seen: &issuerSeen)
+                }
+            }
+
+            for issuer in extractCardIssuers(from: lines) {
+                appendUnique(issuer, to: &cardIssuers, seen: &issuerSeen)
+            }
+
+            for expiry in extractCardExpiryDates(from: lines) {
+                appendUnique(normalizeExpiry(expiry), to: &cardExpiryDates, seen: &expirySeen)
+            }
+
+            for code in extractSecurityCodes(from: text) {
+                appendUnique(code, to: &securityCodes, seen: &securityCodeSeen)
+            }
         }
 
-        for receiptID in extractReceiptIDs(from: text) {
-            appendUnique(receiptID, to: &receiptIDs, seen: &receiptIDSeen)
-        }
+        if includeReceiptDetails {
+            for receiptID in extractReceiptIDs(from: text) {
+                appendUnique(receiptID, to: &receiptIDs, seen: &receiptIDSeen)
+            }
 
-        for method in extractPaymentMethods(from: lines, hasCardNumber: !cardNumbers.isEmpty) {
-            appendUnique(method, to: &paymentMethods, seen: &paymentSeen)
+            for method in extractPaymentMethods(
+                from: lines,
+                hasCardNumber: !cardNumbers.isEmpty,
+                issuers: cardIssuers
+            ) {
+                appendUnique(method, to: &paymentMethods, seen: &paymentSeen)
+            }
         }
 
         let detectorTypes = NSTextCheckingResult.CheckingType.link.rawValue
@@ -871,7 +887,7 @@ struct ContentView: View {
                     guard let phoneNumber = result.phoneNumber else { return }
                     appendUnique(phoneNumber, to: &phones, seen: &phoneSeen)
                 case .date:
-                    guard let date = result.date else { return }
+                    guard includeDateAndAmountDetails, let date = result.date else { return }
                     appendUnique(Self.detailsDateFormatter.string(from: date), to: &dates, seen: &dateSeen)
                 case .address:
                     if let address = formatAddress(from: result) {
@@ -915,20 +931,54 @@ struct ContentView: View {
         }
     }
 
-    private func extractCardNumberCandidates(from text: String) -> [String] {
-        let rawCandidates = matches(
-            of: #"(?:[0-9OoQqDIlL|!SsBbGg][ -]?){13,24}"#,
-            in: text
-        )
+    private func captureMatches(
+        of pattern: String,
+        in text: String,
+        group: Int,
+        options: NSRegularExpression.Options = []
+    ) -> [String] {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: options) else {
+            return []
+        }
+        let range = NSRange(text.startIndex..., in: text)
+        return regex.matches(in: text, options: [], range: range).compactMap { result in
+            guard result.numberOfRanges > group,
+                  let matchRange = Range(result.range(at: group), in: text) else { return nil }
+            return String(text[matchRange])
+        }
+    }
+
+    private func extractCardNumberCandidates(from lines: [String]) -> [String] {
         var formattedNumbers: [String] = []
         var seen = Set<String>()
+        let cardPattern = #"(?:[0-9OoQqDIlL|!SsBbGg][ -]?){13,24}"#
+        let contextKeywords = [
+            "card", "credit", "debit", "visa", "mastercard", "master card",
+            "amex", "american express", "discover", "pan", "account number"
+        ]
+        let receiptRefKeywords = [
+            "receipt", "invoice", "order", "reference", "ref", "transaction", "trace", "auth"
+        ]
 
-        for raw in rawCandidates {
-            let digits = normalizeOCRDigits(raw)
-            guard (13...19).contains(digits.count) else { continue }
-            guard isValidCardNumber(digits) else { continue }
-            guard seen.insert(digits).inserted else { continue }
-            formattedNumbers.append(formatCardNumber(digits))
+        for line in lines {
+            let lowered = line.lowercased()
+            let hasCardContext = contextKeywords.contains(where: lowered.contains)
+            let hasReceiptReferenceContext = receiptRefKeywords.contains(where: lowered.contains)
+            let rawCandidates = matches(of: cardPattern, in: line)
+
+            for raw in rawCandidates {
+                let digits = normalizeOCRDigits(raw)
+                guard (13...19).contains(digits.count) else { continue }
+                guard isValidCardNumber(digits) else { continue }
+
+                // Reduce false positives by requiring card-like context when the line looks like a receipt id.
+                if hasReceiptReferenceContext && !hasCardContext {
+                    continue
+                }
+
+                guard seen.insert(digits).inserted else { continue }
+                formattedNumbers.append(formatCardNumber(digits))
+            }
         }
 
         return formattedNumbers
@@ -999,6 +1049,57 @@ struct ContentView: View {
         return nil
     }
 
+    private func extractCardIssuers(from lines: [String]) -> [String] {
+        let issuerKeywords: [(keyword: String, label: String)] = [
+            ("visa", "Visa"),
+            ("master card", "Mastercard"),
+            ("mastercard", "Mastercard"),
+            ("amex", "American Express"),
+            ("american express", "American Express"),
+            ("discover", "Discover")
+        ]
+
+        let joined = lines.joined(separator: "\n").lowercased()
+        var issuers: [String] = []
+        var seen = Set<String>()
+
+        for issuer in issuerKeywords where joined.contains(issuer.keyword) {
+            if seen.insert(issuer.label).inserted {
+                issuers.append(issuer.label)
+            }
+        }
+        return issuers
+    }
+
+    private func extractCardExpiryDates(from lines: [String]) -> [String] {
+        let labeledPattern = #"(?i)\b(?:exp(?:iry)?|valid|thru|good\s*thru)\b[^0-9]{0,8}(0?[1-9]\s*[/\-]\s*(?:\d{2}|\d{4}))\b"#
+        let genericPattern = #"\b(0?[1-9]|1[0-2])\s*[/\-]\s*(\d{2}|\d{4})\b"#
+        let cardContextKeywords = ["card", "visa", "mastercard", "master card", "amex", "discover", "credit", "debit"]
+
+        var results: [String] = []
+        var seen = Set<String>()
+
+        for line in lines {
+            for date in captureMatches(of: labeledPattern, in: line, group: 1, options: [.caseInsensitive]) {
+                let normalized = normalizeExpiry(date)
+                if seen.insert(normalized).inserted {
+                    results.append(normalized)
+                }
+            }
+
+            let lowered = line.lowercased()
+            guard cardContextKeywords.contains(where: lowered.contains) else { continue }
+            for date in matches(of: genericPattern, in: line) {
+                let normalized = normalizeExpiry(date)
+                if seen.insert(normalized).inserted {
+                    results.append(normalized)
+                }
+            }
+        }
+
+        return results
+    }
+
     private func extractSecurityCodes(from text: String) -> [String] {
         guard let regex = try? NSRegularExpression(
             pattern: #"(?i)\b(?:cvv2?|cvc2?|cid|security(?:\s*code)?|sec(?:urity)?\s*code)\b[\s:#-]*([0-9OoQqDIlL|!SsBbGg]{3,4})\b"#
@@ -1032,7 +1133,7 @@ struct ContentView: View {
         }
     }
 
-    private func extractPaymentMethods(from lines: [String], hasCardNumber: Bool) -> [String] {
+    private func extractPaymentMethods(from lines: [String], hasCardNumber: Bool, issuers: [String]) -> [String] {
         let methods: [(keyword: String, label: String)] = [
             ("cash", "Cash"),
             ("visa", "Visa"),
@@ -1058,10 +1159,29 @@ struct ContentView: View {
                 found.append(method.label)
             }
         }
+
+        for issuer in issuers where seen.insert(issuer).inserted {
+            found.append(issuer)
+        }
+
         if hasCardNumber && !found.contains(where: { ["Visa", "Mastercard", "American Express", "Discover", "Debit", "Credit"].contains($0) }) {
             found.append("Card")
         }
         return found
+    }
+
+    private func maskedCardNumbers(_ values: [String]) -> [String] {
+        var masked: [String] = []
+        var seen = Set<String>()
+        for value in values {
+            let digits = value.filter(\.isNumber)
+            guard digits.count >= 4 else { continue }
+            let maskedValue = "**** \(digits.suffix(4))"
+            if seen.insert(maskedValue).inserted {
+                masked.append(maskedValue)
+            }
+        }
+        return masked
     }
 
     private func normalizeOCRDigits(_ value: String) -> String {
